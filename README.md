@@ -6,15 +6,16 @@
 
 <h2 align="center"> A self-hosted local image compressor that runs in your browser.</h2>
 
-
 <center>
    <img src="git-images/featured-desktop-solo-dark.jpg" alt="mazanoke screencapture" width="1000">
 </center>
 
 ## About
-MAZANOKE is a simple image compressor and converter that runs entirely in your browser. No external uploads, works offline as a web app, and is powered by [Browser Image Compression](https://github.com/Donaldcwl/browser-image-compression).
+
+MAZANOKE is a simple image compressor and converter that runs entirely in your browser. No external uploads, works offline as a web app, and is powered by [Browser Image Compression](https://github.com/Donaldcwl/browser-image-compression). You can try a demo [here](https://civilblur.github.io/mazanoke/)
 
 ## Table of Content
+
 - [Features](#features)
 - [Install](#install)
 - [Screenshots](#screenshots)
@@ -23,22 +24,23 @@ MAZANOKE is a simple image compressor and converter that runs entirely in your b
 ## Features
 
 - 🚀 **Compress & Convert Images Instantly In Your Browser**
-   - Adjust image quality (0-100%).
-   - Set a target file size.
-   - Set max dimensions, to not exceed a certain width/height.
-   - Convert between JPG, PNG, and WebP.
+  - Adjust image quality (0-100%).
+  - Set a target file size.
+  - Set max dimensions, to not exceed a certain width/height.
+  - Convert between JPG, PNG, and WebP.
 - 🌍 **Installable Web App**
-   - Use as a Progressive Web App (PWA).
-   - Dark and light mode.
-   - Fully responsive for desktop, tablet, and mobile.
+  - Use as a Progressive Web App (PWA).
+  - Dark and light mode.
+  - Fully responsive for desktop, tablet, and mobile.
 - 🔒 **Privacy-Focused**
-   - Works offline.
-   - All image processing happens locally.
-   - No data is uploaded to external servers. Your files stay on your device.
+  - Works offline.
+  - All image processing happens locally.
+  - No data is uploaded to external servers. Your files stay on your device.
 
 **Planned**
+
 - [ ] Upload queue.
-   - Currently, only one image can be uploaded at a time.
+  - Currently, only one image can be uploaded at a time.
 - [ ] Remember last-used settings.
 
 ## Install
@@ -46,6 +48,7 @@ MAZANOKE is a simple image compressor and converter that runs entirely in your b
 ### Docker
 
 1. Using [Docker Compose](https://docs.docker.com/compose/):
+
 ```
 services:
   mazanoke:
