@@ -19,14 +19,14 @@ jobs:
 
       - name: archive files
         run: |
-          tar czf archive.tar.gz index.html assets/ favicon.ico manifest.json service-worker.js
+          tar cf artifact.tar index.html assets/ favicon.ico manifest.json service-worker.js
 
       - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: github-pages
           path: |
-            archive.tar.gz
+            artifact.tar
 
       - name: deploy to GitHub pages
         uses: actions/deploy-pages@v4
