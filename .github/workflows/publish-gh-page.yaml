@@ -17,16 +17,16 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
 
+      - name: archive files
+        run: |
+          tar czf archive.tar.gz index.html assets/ favicon.ico manifest.json service-worker.js
+
       - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: github-pages
           path: |
-            ./index.html
-            ./assets 
-            ./favicon.ico 
-            ./manifest.json 
-            ./service-worker.js
+            archive.tar.gz
 
       - name: deploy to GitHub pages
         uses: actions/deploy-pages@v4
