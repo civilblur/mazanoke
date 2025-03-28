@@ -3,7 +3,7 @@ on:
   release:
     types:
       - published
-  workflow_dispatch:
+  push:
 
 permissions:
   contents: read
