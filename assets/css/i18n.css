@@ -1,0 +1,86 @@
+/* i18n.css - language selector styles */
+
+.language-selector {
+  position: relative;
+  margin-right: 1rem;
+}
+
+.language-selector__button {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  border-radius: var(--rounded-md);
+  color: var(--color-on-surface-high);
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color var(--duration-hover) ease;
+}
+
+.language-selector__button:hover {
+  background-color: var(--color-surface-higher);
+}
+
+.language-selector__button svg {
+  vertical-align: middle;
+}
+
+.language-selector__button span {
+  margin-left: 0.5rem;
+}
+
+.language-selector__menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  width: auto;
+  min-width: 160px;
+  background: var(--color-surface-high);
+  border-radius: var(--rounded-md);
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all var(--duration-200) ease;
+  z-index: 100;
+  overflow: hidden;
+  animation: fadeIn var(--duration-200) ease forwards;
+}
+
+.language-selector__menu--active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.language-selector__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  color: var(--color-on-surface-high);
+  text-decoration: none;
+  transition: background-color var(--duration-hover) ease, color var(--duration-hover) ease;
+}
+
+.language-selector__option:hover {
+  background-color: var(--color-surface-higher);
+}
+
+.language-selector__option--active {
+  background-color: var(--color-surface-highest);
+  font-weight: 500;
+  color: var(--color-on-surface-highest) !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 
