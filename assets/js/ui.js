@@ -289,3 +289,27 @@ function selectSubpage(value) {
   storeConfigFormDebounce();
 }
 
+// Initialize language selector
+function initLanguageSelector() {
+  const languageSelector = ui.language.selector;
+  
+  if (languageSelector) {
+    languageSelector.innerHTML = '';
+    
+    const languages = Object.keys(App.i18n.languageNames);
+    
+    languages.forEach(langCode => {
+      const langName = App.i18n.languageNames[langCode];
+      const isActive = langCode === App.i18n.currentLang;
+      
+      const option = document.createElement('a');
+      option.href = 'javascript:void(0)';
+      option.className = `language-selector__option${isActive ? ' language-selector__option--active' : ''}`;
+      option.setAttribute('data-lang', langCode);
+      option.textContent = langName;
+      
+      languageSelector.appendChild(option);
+    });
+  }
+}
+

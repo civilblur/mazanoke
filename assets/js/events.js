@@ -2,6 +2,7 @@ initApp();
 
 function initApp() {
   // Initialize the app
+  initI18n();
   initDropZone();
   initInputValidation();
   initClipboardPaste();
@@ -9,7 +10,6 @@ function initApp() {
   setConfigForm();
   restoreConfigForm();
 }
-
 
 function initDropZone() {
   const dropZone = ui.groups.dropZone;
@@ -126,3 +126,43 @@ function abort(event) {
   state.controller.abort(new Error("Image compression cancelled"));
 }
 
+// Add click event to all language options
+function setupLanguageOptions() {
+  const langOptions = document.querySelectorAll('.language-selector__option');
+  langOptions.forEach(option => {
+    option.addEventListener('click', function(event) {
+      event.preventDefault();
+      const lang = this.getAttribute('data-lang');
+      App.i18n.setLanguage(lang);
+    });
+  });
+}
+
+function initI18n() {
+  App.i18n.init();
+
+  initLanguageSelector();
+  
+  const langButton = ui.language.button;
+  const langMenu = ui.language.selector;
+  
+  if (langButton && langMenu) {
+    // Toggle language menu
+    langButton.addEventListener('click', function() {
+      langMenu.classList.toggle('language-selector__menu--active');
+    });
+    
+    // Click other area to close dropdown menu
+    document.addEventListener('click', function(event) {
+      if (!langButton.contains(event.target) && !langMenu.contains(event.target)) {
+        langMenu.classList.remove('language-selector__menu--active');
+      }
+    });
+    
+    setupLanguageOptions();
+    
+    // Listen to language selector content change, rebind event
+    const observer = new MutationObserver(setupLanguageOptions);
+    observer.observe(langMenu, { childList: true });
+  }
+}
