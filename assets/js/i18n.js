@@ -3,6 +3,15 @@
 window.App = window.App || {};
 App.i18n = {
   currentLang: 'en',
+  defaultLang: 'en',
+  dataAttrName: 'data-i18n',
+  
+  languageNames: {
+    'en': 'English',
+    'zh': '简体中文',
+    'ja': '日本語',
+    'es': 'Español'
+  },
   
   translations: {
     'en': {
@@ -219,9 +228,18 @@ App.i18n = {
     }
   },
 
-  // Initialize the i18n system
+  storage: {
+    get: function(key) {
+      return localStorage.getItem(key);
+    },
+    set: function(key, value) {
+      localStorage.setItem(key, value);
+    }
+  },
+
+  // Initialize i18n system
   init: function() {
-    const savedLang = localStorage.getItem('language');
+    const savedLang = this.storage.get('language');
     if (savedLang && this.translations[savedLang]) {
       this.currentLang = savedLang;
     } else {
@@ -232,7 +250,6 @@ App.i18n = {
     }
     
     this.applyLanguage(this.currentLang);
-    
     this.updateLanguageSelector();
   },
   
@@ -240,68 +257,53 @@ App.i18n = {
   setLanguage: function(lang) {
     if (this.translations[lang]) {
       this.currentLang = lang;
-      localStorage.setItem('language', lang);
+      this.storage.set('language', lang);
       this.applyLanguage(lang);
       this.updateLanguageSelector();
       
-      // Update the activation status of all language options
-      const langOptions = document.querySelectorAll('.language-selector__option');
-      langOptions.forEach(option => {
-        const optionLang = option.getAttribute('data-lang');
-        if (optionLang === lang) {
-          option.classList.add('language-selector__option--active');
-        } else {
-          option.classList.remove('language-selector__option--active');
-        }
-      });
+      this.updateAllLanguageOptions(lang);
     }
   },
   
-  // Update the language selector status
+  // Update all language options active state
+  updateAllLanguageOptions: function(lang) {
+    const langOptions = document.querySelectorAll('.language-selector__option');
+    langOptions.forEach(option => {
+      const optionLang = option.getAttribute('data-lang');
+      if (optionLang === lang) {
+        option.classList.add('language-selector__option--active');
+      } else {
+        option.classList.remove('language-selector__option--active');
+      }
+    });
+  },
+  
+  // Update language selector state
   updateLanguageSelector: function() {
     const langSelector = document.getElementById('languageSelector');
     if (langSelector) {
       const currentLangElement = document.getElementById('currentLanguage');
       if (currentLangElement) {
-        switch(this.currentLang) {
-          case 'zh':
-            currentLangElement.textContent = '简体中文';
-            break;
-          case 'ja':
-            currentLangElement.textContent = '日本語';
-            break;
-          case 'es':
-            currentLangElement.textContent = 'Español';
-            break;
-          default:
-            currentLangElement.textContent = 'English';
-        }
+        currentLangElement.textContent = this.languageNames[this.currentLang] || this.languageNames[this.defaultLang];
       }
       
-      // Update the activation status of the language options
-      const langOptions = langSelector.querySelectorAll('.language-selector__option');
-      langOptions.forEach(option => {
-        const optionLang = option.getAttribute('data-lang');
-        if (optionLang === this.currentLang) {
-          option.classList.add('language-selector__option--active');
-        } else {
-          option.classList.remove('language-selector__option--active');
-        }
-      });
+      this.updateAllLanguageOptions(this.currentLang);
     }
   },
   
   // Apply language to UI
   applyLanguage: function(lang) {
+    // Update title and description
     document.title = this.getTranslation('app.title', lang);
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
       metaDesc.setAttribute('content', this.getTranslation('app.description', lang));
     }
     
-    const elements = document.querySelectorAll('[data-i18n]');
+    // Update all elements with data-i18n attribute
+    const elements = document.querySelectorAll(`[${this.dataAttrName}]`);
     elements.forEach(el => {
-      const key = el.getAttribute('data-i18n');
+      const key = el.getAttribute(this.dataAttrName);
       const text = this.getTranslation(key, lang);
       
       // Check if it is HTML content
@@ -312,10 +314,11 @@ App.i18n = {
       }
     });
     
+    // Update all select options
     const selectElements = document.querySelectorAll('select');
     selectElements.forEach(select => {
       Array.from(select.options).forEach(option => {
-        const i18nKey = option.getAttribute('data-i18n');
+        const i18nKey = option.getAttribute(this.dataAttrName);
         if (i18nKey) {
           option.textContent = this.getTranslation(i18nKey, lang);
         }
@@ -328,29 +331,34 @@ App.i18n = {
   // Get the translated text
   getTranslation: function(key, lang) {
     lang = lang || this.currentLang;
+    
     if (this.translations[lang] && this.translations[lang][key]) {
       return this.translations[lang][key];
-    } else if (this.translations['en'] && this.translations['en'][key]) {
-      return this.translations['en'][key];
+    } 
+    else if (this.translations[this.defaultLang] && this.translations[this.defaultLang][key]) {
+      return this.translations[this.defaultLang][key];
     }
-    // If nothing is found, return the key name
+    
     return key;
+  },
+  
+  // Add new language support
+  addLanguage: function(langCode, langName, translations) {
+    if (langCode && translations) {
+      this.translations[langCode] = translations;
+      this.languageNames[langCode] = langName || langCode;
+      return true;
+    }
+    return false;
+  },
+  
+  // Configure i18n system
+  configure: function(options) {
+    if (options.defaultLang) this.defaultLang = options.defaultLang;
+    if (options.dataAttrName) this.dataAttrName = options.dataAttrName;
+    if (options.storage) this.storage = options.storage;
   }
 };
-
-// Initialize the i18n system after the DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  App.i18n.init();
-  
-  const langOptions = document.querySelectorAll('.language-selector__option');
-  langOptions.forEach(option => {
-    option.addEventListener('click', function(event) {
-      event.preventDefault();
-      const lang = this.getAttribute('data-lang');
-      App.i18n.setLanguage(lang);
-    });
-  });
-});
 
 // Global function to get translations
 function i18n(key) {
