@@ -51,6 +51,11 @@ app.ui = {
     quality: document.getElementById("qualityField"),
     compressMethod: document.getElementById("compressMethodGroup"),
   },
+  language: {
+    selector: document.getElementById("languageSelector"),
+    button: document.getElementById("languageSelectorButton"),
+    currentLabel: document.getElementById("currentLanguage"),
+  },
 };
 
 app.config = {
