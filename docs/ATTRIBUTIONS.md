@@ -49,7 +49,7 @@ MAZANOKE would not be possible without the projects listed here.
 - **Author:** Stuart Knightley
 - **License**: [GNU General Public License v3.0](https://github.com/Stuk/jszip/blob/main/LICENSE.markdown)
 - **Source**: https://github.com/Stuk/jszip
-- **Version**: v3.10.1
+- **Version**: v3.10.2
 - **Usage**: Zip files.
 
 ### Geist, Geist Mono
