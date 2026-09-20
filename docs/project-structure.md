@@ -27,11 +27,6 @@ An outline of the project structure.
 | `utilities.js`                         | Utility functions for various tasks and smaller types of processing.            |
 |                                        |                                                                                 |
 | **Vendor Libraries (`assets/vendor`)** | External libraries, essential to the app's functionality.                       |
-| `browser-image-compress.js`            | A library for browser-side image compression.                                   |
-| `heic-to.js`                           | HEIC image decoder, allowing converting to other browser-friendly file types.   |
-| `ico.js`                               | Parsing ICO files type.                                                         |
-| `jszip.js`                             | Handles zipping of image files for download.                                    |
-| `png2ico.js`                           | Encoding ICO files type.                                                        |
 | ...                                    | See purpose of all libraries in ATTRIBUTIONS.md                                 |
 |                                        |                                                                                 |
 | **Images (`assets/images`)**           | Static images for user interface and metatags.                                  |
