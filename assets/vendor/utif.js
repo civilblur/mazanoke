@@ -108,8 +108,9 @@ UTIF.decode = function(buff, prm)
 	var num = bin.readUshort(data, offset);  offset+=2;
 
 	var ifdo = bin.readUint(data, offset);  offset+=4;
-	var ifds = [];
+	var ifds = [], offs=[];
 	while(true) {
+		if(offs.indexOf(ifdo)!=-1) break;  offs.push(ifdo);  // prevent "circular" pointers 
 		var cnt = bin.readUshort(data,ifdo), typ = bin.readUshort(data,ifdo+4);  if(cnt!=0) if(typ<1 || 13<typ) {  log("error in TIFF");  break  };
 		UTIF._readIFD(bin, data, ifdo, ifds, 0, prm);
 		
@@ -133,6 +134,7 @@ UTIF.decodeImage = function(buff, img, ifds)
 	var cmpr = img["t259"] ? img["t259"][0] : 1;  //delete img["t259"];
 	var fo   = img["t266"] ? img["t266"][0] : 1;  //delete img["t266"];
 	if(cmpr==7 && img["t258"] && img["t258"].length!=3 && img["t258"][0]==8)  {  img["t258"]=[8,8,8];  img["t277"]=[3];  }  // not for lossless JPEG - "RAW_CANON_EOS_550D.CR2"
+	if(img["t277"]==null && img["t258"] && img["t258"].length==3) img["t277"]=[3];  // t277 missing in some 3-channel JPGs inside CR2 - "RAW_CANON_350D.CR2"
 
 	var bps = img["t258"]?img["t258"][0]:1;
 	var spp = img["t277"]?img["t277"][0]:1;  //if(cmpr==7) spp=3; // jpg
@@ -229,7 +231,7 @@ UTIF.decode._decompress = function(img,ifds, data, off, len, cmpr, tgt, toff, fo
 	//console.log(Date.now()-time);
 	
 	var pco = img["t284"] ? img["t284"][0] : 1;  // planar configuration
-	var bps = (img["t258"]?Math.min(32,img["t258"][0]):1);
+	var bps = (img["t258"]?Math.min(64,img["t258"][0]):1);
 	var noc = pco==2 ? 1 : (img["t277"]?img["t277"][0]:1), bpp=(bps*noc)>>>3, bpl = Math.ceil(bps*noc*w/8);
 	
 	// convert to Little Endian  /*
@@ -350,6 +352,29 @@ UTIF.decode._decompress = function(img,ifds, data, off, len, cmpr, tgt, toff, fo
                 }
                 if (RW2_Format == 7) {
                     throw RW2_Format;
+					
+					/*
+					for(var y=0; y<rawHeight; y++) {
+						var ix = 0;
+						for(var x=0; x<rawWidth; x+=9) {
+							var so = off+(y*10752)+x*16;
+							
+							var idx = y*rawWidth+x;
+							var bytes = data.slice(so,so+16);
+							
+									result[idx    ] = bytes[0] + ((bytes[1] & 0x3F) << 8);
+                                    result[idx + 1] = (bytes[1] >> 6) + 4 * (bytes[2]) + ((bytes[3] & 0xF) << 10);
+                                    result[idx + 2] = (bytes[3] >> 4) + 16 * (bytes[4]) + ((bytes[5] & 3) << 12);
+                                    result[idx + 3] = ((bytes[5] & 0xFC) >> 2) + (bytes[6] << 6);
+                                    result[idx + 4] = bytes[7] + ((bytes[8] & 0x3F) << 8);
+                                    result[idx + 5] = (bytes[8] >> 6) + 4 * bytes[9] + ((bytes[10] & 0xF) << 10);
+                                    result[idx + 6] = (bytes[10] >> 4) + 16 * bytes[11] + ((bytes[12] & 3) << 12);
+                                    result[idx + 7] = ((bytes[12] & 0xFC) >> 2) + (bytes[13] << 6);
+                                    result[idx + 8] = bytes[14] + ((bytes[15] & 0x3F) << 8);
+							//ix+=9;
+							//if(ix>=rawWidth/9) ix=(ix%9)+1;
+						}
+					}  //*/
 
                     // Skatch of version 7 
                     /*
@@ -793,7 +818,8 @@ UTIF.decode._decodeNewJPEG = function(img, data, off, len, tgt, toff)
 	}
 	else for (var i=0; i<len; i++) buff[i] = data[off+i];
 
-	if(img["t262"][0]==32803 || (img["t259"][0]==7 && img["t262"][0]==34892)) // lossless JPEG (used in DNG files)
+	//  "16,16,16" for "DSC06873.ARW"
+	if(img["t262"][0]==32803 || (img["t259"][0]==7 && img["t262"][0]==34892) || img["t258"].join(",")=="16,16,16") // lossless JPEG (used in DNG files)
 	{
 		var bps = img["t258"][0];//, dcdr = new LosslessJpegDecoder();
 		//var time = Date.now();
@@ -832,6 +858,16 @@ UTIF.decode._decodeNewJPEG = function(img, data, off, len, tgt, toff)
 	else
 	{
 		var parser = new UTIF.JpegDecoder();  parser.parse(buff);
+		
+		// When Photometric is RGB (2) and the JPEG stream has no explicit color space
+		// indicator (no Adobe marker), and the component IDs are not the standard
+		// JFIF YCbCr IDs (1,2,3), the JPEG data are likely stored in RGB color space.
+		// Override the JPEG decoder's default assumption of YCbCr when so.
+		if(img["t262"] && img["t262"][0]==2 && !parser.b) {
+			if(parser.W.length==3 && !(parser.W[0].index==1 && parser.W[1].index==2 && parser.W[2].index==3)) {
+				parser.N = 0;
+			}
+		}
 		var decoded = parser.getData({"width":parser.width,"height":parser.height,"forceRGB":true,"isSourcePDF":false});
 		for (var i=0; i<decoded.length; i++) tgt[toff + i] = decoded[i];
 	}
@@ -1107,7 +1143,7 @@ UTIF.decode._decodeG4 = function(data, off, slen, tgt, toff, w, fo)
 		var bit =0;
 		if(fo==1) bit = (data[boff>>>3]>>>(7-(boff&7)))&1;
 		if(fo==2) bit = (data[boff>>>3]>>>(  (boff&7)))&1;
-		boff++;  wrd+=bit;
+		boff++;  wrd+=bit;  if(wrd.length>100) return 1;  // error, probably G3
 		if(mode=="H")
 		{
 			if(U._lens[clr][wrd]!=null)
@@ -1130,6 +1166,7 @@ UTIF.decode._decodeG4 = function(data, off, slen, tgt, toff, w, fo)
 		}
 		//if(wrd.length>150) {  log(wrd);  break;  throw "e";  }
 	}
+	return 0;
 }
 
 UTIF.decode._findDiff = function(line, x, clr) {  for(var i=0; i<line.length; i+=2) if(line[i]>=x && line[i+1]==clr)  return line[i];  }
@@ -1330,6 +1367,8 @@ UTIF._readIFD = function(bin, data, offset, ifds, depth, prm)
 	return offset;
 }
 
+UTIF._remapKey = function(key) {  if(key=="exifIFD") key="t34665";  if(key=="gpsiIFD") key="t34853";  return key;  }
+
 UTIF._writeIFD = function(bin, types, data, offset, ifd)
 {
 	var keys = Object.keys(ifd), knum=keys.length;  if(ifd["exifIFD"]) knum--;  if(ifd["gpsiIFD"]) knum--;
@@ -1337,12 +1376,12 @@ UTIF._writeIFD = function(bin, types, data, offset, ifd)
 
 	var eoff = offset + knum*12 + 4;
 	
-	keys.sort(function(a,b) {  return parseInt(a.slice(1))-parseInt(b.slice(1));  });
+	keys.sort(function(a,b) {  a=UTIF._remapKey(a);  b=UTIF._remapKey(b);  return parseInt(a.slice(1))-parseInt(b.slice(1));  });
 
 	for(var ki=0; ki<keys.length; ki++)
 	{
 		var key = keys[ki];  if(key=="t34665" || key=="t34853") continue;  
-		if(key=="exifIFD") key="t34665";  if(key=="gpsiIFD") key="t34853";
+		key=UTIF._remapKey(key);
 		var tag = parseInt(key.slice(1)), type = types.main[tag];  if(type==null) type=types.rest[tag];		
 		if(type==null || type==0) throw new Error("unknown type of tag: "+tag);
 		//console.log(offset+":", tag, type, eoff);
@@ -1391,7 +1430,7 @@ UTIF.toRGBA8 = function(out, scl)
 	var img = new Uint8Array(area*4);
 	//console.log(out);
 	// 0: WhiteIsZero, 1: BlackIsZero, 2: RGB, 3: Palette color, 4: Transparency mask, 5: CMYK
-	var intp = (out["t262"] ? out["t262"][0]: 2), bps = (out["t258"]?Math.min(32,out["t258"][0]):1);
+	var intp = (out["t262"] ? out["t262"][0]: 2), bps = (out["t258"]?Math.min(64,out["t258"][0]):1);
 	if(out["t262"]==null && bps==1) intp=0;
 	
 	var smpls = out["t277"]?out["t277"][0] : (out["t258"]?out["t258"].length : [1,1,3,1,1,4,3][intp]);  //if(out["t259"] && out["t259"][0]==7) smpls=3; // jpg
@@ -1416,14 +1455,16 @@ UTIF.toRGBA8 = function(out, scl)
 	{
 		if(scl==null) scl=1/256;
 		var f32 = ((data.length&3)==0) ? new Float32Array(data.buffer) : null;
+		var f64 = ((data.length&7)==0) ? new Float64Array(data.buffer) : null;
 		
 		for(var y=0; y<h; y++) {
 			var off = y*bpl, io = y*w;
 			if(bps== 1) for(var i=0; i<w; i++) {  var qi=(io+i)<<2, px=((data[off+(i>>3)])>>(7-  (i&7)))&1;   img[qi]=img[qi+1]=img[qi+2]=(px)*255;  img[qi+3]=255;    }
 			if(bps== 2) for(var i=0; i<w; i++) {  var qi=(io+i)<<2, px=((data[off+(i>>2)])>>(6-2*(i&3)))&3;   img[qi]=img[qi+1]=img[qi+2]=(px)* 85;  img[qi+3]=255;    }
 			if(bps== 8) for(var i=0; i<w; i++) {  var qi=(io+i)<<2, px=data[off+i*smpls];  img[qi]=img[qi+1]=img[qi+2]=    px;  img[qi+3]=255;    }  // "smpls" needed for newJPEG compression (RGB output) - "jpg7/download.tif"
-			if(bps==16) for(var i=0; i<w; i++) {  var qi=(io+i)<<2, o=off+(2*i), px=(data[o+1]<<8)|data[o];  img[qi]=img[qi+1]=img[qi+2]= Math.min(255,~~(px*scl));  img[qi+3]=255;    } // ladoga.tif
+			if(bps==16) for(var i=0; i<w; i++) {  var qi=(io+i)<<2, o=off+2*i*smpls, px=(data[o+1]<<8)|data[o];  img[qi]=img[qi+1]=img[qi+2]= Math.min(255,~~(px*scl));  img[qi+3]=(smpls==2 ? data[o+2] : 255);    } // ladoga.tif
 			if(bps==32) for(var i=0; i<w; i++) {  var qi=(io+i)<<2, o=(off>>>2)+i, px=f32[o];  img[qi]=img[qi+1]=img[qi+2]= ~~(0.5+255*px);  img[qi+3]=255;    }
+			if(bps==64) for(var i=0; i<w; i++) {  var qi=(io+i)<<2, o=(off>>>3)+i, px=f64[o];  img[qi]=img[qi+1]=img[qi+2]= ~~(0.5+255*px);  img[qi+3]=255;    }
 		}
 	}
 	else if(intp==2)
@@ -1482,7 +1523,7 @@ UTIF.toRGBA8 = function(out, scl)
 		for(var i=0; i<area; i++) {
 			var qi=i<<2, si=i*smpls;  
 			
-			if(window.UDOC) {
+			if(window && window.UDOC) {
 				var C=data[si], M=data[si+1], Y=data[si+2], K=data[si+3];
 				var c = UDOC.C.cmykToRgb([C*(1/255), M*(1/255), Y*(1/255), K*(1/255)]);
 				img[qi] = ~~(0.5+255*c[0]);  img[qi+1] = ~~(0.5+255*c[1]);  img[qi+2] = ~~(0.5+255*c[2]);

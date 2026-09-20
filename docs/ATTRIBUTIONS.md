@@ -41,7 +41,7 @@ MAZANOKE would not be possible without the projects listed here.
 - **Author:** Photopea
 - **License**: [MIT License](https://github.com/photopea/UTIF.js/blob/master/LICENSE)
 - **Source**: https://github.com/photopea/UTIF.js
-- **Version**: 3.1.0
+- **Version**: commit [`5883510`](https://github.com/photopea/UTIF.js/commit/588351078202eebccdb3ba996f5b98c640e4265a)
 - **Usage**: Decoding TIFF-related file types.
 
 ### JSZip
