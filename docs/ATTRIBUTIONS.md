@@ -16,7 +16,7 @@ MAZANOKE would not be possible without the projects listed here.
 - **License**: [GNU Lesser General Public License v3.0](https://www.npmjs.com/package/heic-to)
   - Built on top of [libheif](https://github.com/strukturag/libheif) ([LGPL](https://github.com/strukturag/libheif?tab=License-1-ov-file)), [libde265](https://github.com/strukturag/libde265) ([GPLv3](https://github.com/strukturag/libde265?tab=License-1-ov-file#readme))
 - **Source**: https://github.com/hoppergee/heic-to
-- **Version**: v1.4.2
+- **Version**: [Custom build, using libheif v1.23.4](https://github.com/hoppergee/heic-to/pull/33).
 - **Usage**: Converting from HEIC file type.
 
 ### libheif-js
@@ -25,7 +25,7 @@ MAZANOKE would not be possible without the projects listed here.
 - **License**: [GNU Lesser General Public License v3.0](https://github.com/catdad-experiments/libheif-js/blob/master/LICENSE)
   - Built on top of [libheif](https://github.com/strukturag/libheif) ([LGPL](https://github.com/strukturag/libheif?tab=License-1-ov-file))
 - **Source**: https://github.com/catdad-experiments/libheif-js
-- **Version**: v1.19.8
+- **Version**: v1.23.2
 - **Usage**: Decoding HEIC file types.
 
 ### icojs
