@@ -4,11 +4,10 @@ services:
   mazanoke:
     build:
       context: .
-      args:
-        - ENVIRONMENT=production # development
     environment:
       - USERNAME=test
       - PASSWORD=test
+      - METATAGS=true # development
     ports:
       - "3475:80"
     restart: unless-stopped

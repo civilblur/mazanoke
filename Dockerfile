@@ -1,7 +1,5 @@
 FROM node:alpine AS prepare
 
-ARG ENVIRONMENT
-
 RUN mkdir -p /usr/share/nginx/html/assets
 COPY ./index.html /usr/share/nginx/html/index.html
 COPY ./assets /usr/share/nginx/html/assets
@@ -11,7 +9,6 @@ COPY ./service-worker.js /usr/share/nginx/html
 COPY ./scripts /scripts
 
 RUN node /scripts/environment.common.js
-RUN node /scripts/environment.prod.js
 
 FROM nginx:alpine
 
@@ -21,7 +18,15 @@ COPY ./scripts/basicauth.sh /usr/local/bin/basicauth.sh
 RUN chmod +x /usr/local/bin/basicauth.sh
 COPY ./config/nginx.conf /etc/nginx/conf.d/default.conf
 
+# Setup optional SEO metatags, toggled at runtime with METATAGS=true
+COPY ./scripts/metatags.sh /usr/local/bin/metatags.sh
+COPY ./scripts/metatags.html /usr/local/share/mazanoke/metatags.html
+RUN chmod +x /usr/local/bin/metatags.sh
+
 COPY --from=prepare /usr/share/nginx/html /usr/share/nginx/html
+
+# Keep a pristine copy so the metatag toggle is reversible across restarts.
+RUN cp /usr/share/nginx/html/index.html /usr/local/share/mazanoke/index.html.template
 
 ARG VERSION
 ARG REVISION
@@ -39,4 +44,4 @@ LABEL org.opencontainers.image.title="mazanoke" \
 
 EXPOSE 80
 
-CMD ["/bin/sh", "-c", "/usr/local/bin/basicauth.sh; nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "/usr/local/bin/metatags.sh; /usr/local/bin/basicauth.sh; nginx -g 'daemon off;'"]
