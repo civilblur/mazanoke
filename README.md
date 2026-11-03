@@ -57,6 +57,14 @@ Created for everyday people and designed to be shared with family and friends, i
    Available environmental variables: [Configuration](./docs/configuration.md)
 1. Access the app at `http://localhost:3474`
 
+### Easypanel
+
+[Easypanel](https://easypanel.io/) is a self-hosted Docker deployment platform. MAZANOKE has a one-click deployment template there:
+
+[![Deploy on Easypanel][easypanel-btn]][easypanel-deploy]
+
+<img src=".github/images/easypanel-deployed.png" alt="mazanoke deployed on Easypanel" width="90%">
+
 ### Local
 
 1. Download the [latest source code release](https://github.com/civilblur/mazanoke/releases).
@@ -97,3 +105,6 @@ Created for everyday people and designed to be shared with family and friends, i
 ## License
 
 [GNU General Public License v3.0](https://github.com/civilblur/mazanoke/blob/main/README.md)
+
+[easypanel-btn]: https://easypanel.io/img/deploy-on-easypanel-40.svg
+[easypanel-deploy]: https://easypanel.io/templates/mazanoke
